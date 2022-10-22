@@ -2,7 +2,7 @@
   "name": "femundfilou/kirby-image-snippet",
   "description": "Snippet + Helper Methods for handling images in Kirby",
   "type": "kirby-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "keywords": [
     "kirby-plugin"
   ],
