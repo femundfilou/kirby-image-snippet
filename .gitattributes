@@ -1,0 +1,9 @@
+# Git
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# Dev
+.nvmrc export-ignore
+.release-it.json export-ignore
+.pnpm-lock.yaml export-ignore
+.editorconfig export-ignore

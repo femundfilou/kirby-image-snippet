@@ -1,0 +1,15 @@
+{
+  "name": "kirby-image-snippet",
+  "version": "1.0.0",
+  "description": "Snippet + Helper Methods for handling images in Kirby",
+  "scripts": {
+    "release": "release-it"
+  },
+  "devDependencies": {
+    "release-it": "^15.5.0",
+    "@release-it/bumper": "^4.0.0",
+    "@release-it/conventional-changelog": "^5.0.0"
+  },
+  "author": "Justus Kraft <hallo@justuskraft.de>",
+  "license": "MIT"
+}
