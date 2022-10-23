@@ -30,7 +30,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
         'image' => __DIR__ . '/snippets/image.php',
     ],
     'filesMethods' => [
-        'toImageInterfaces' => function (array $options) {
+        'toImageInterfaces' => function (array $options = []) {
             $images = new Collection();
             foreach ($this as $image) :
                 $imageObject = Image::getImageInterface($image, $options);
@@ -45,7 +45,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
         },
     ],
     'fieldMethods' => [
-        'toImageInterfaces' => function (Field $field, array $options) {
+        'toImageInterfaces' => function (Field $field, array $options = []) {
             $images = new Collection();
             foreach ($field->toFiles() as $image) :
                 $imageObject = Image::getImageInterface($image, $options);
@@ -53,7 +53,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
             endforeach;
             return $images;
         },
-        'toImageInterface' => function (Field $field, array $options) {
+        'toImageInterface' => function (Field $field, array $options = []) {
             return Image::getImageInterface($field->toFiles()->first(), $options);
         },
     ],
