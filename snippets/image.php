@@ -5,6 +5,7 @@
  */
 
 use Fefi\Image\Image;
+use Kirby\Toolkit\V;
 
 $srcsetMethod = Image::getSrcsetMethod();
 $defaults = kirby()->option('femundfilou.image-snippet.defaults');
@@ -52,6 +53,6 @@ $srcsets = Image::getSrcsets($image, $options);
 		<?= e($options['lazy'], 'data-')?>srcset="<?= $image->$srcsetMethod($srcsets[$format]) ?>" />
 	<?php endforeach; ?>
 	<img <?= $options['lazy'] ? 'loading="lazy"' : ''; ?> width="<?= $image->width() ?>"
-		height="<?= isset($options['ratio']) ? $image->width() * $options['ratio'] : $image->height() ?>"
+		height="<?= $options['ratio'] && V::num($options['ratio']) ? $image->width() * $options['ratio'] : $image->height() ?>"
 		src="<?= $placeholder ?>" alt="<?= $image->alt()->or($image->filename()) ?>" <?= $attrs ?> />
 </picture>

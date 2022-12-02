@@ -35,7 +35,7 @@ class Image
     public static function getPlaceholder($image, $options): string
     {
         $placeholderOptions = kirby()->option('femundfilou.image-snippet.placeholder');
-        if(isset($options['ratio']) && V::num($options['ratio'])) {
+        if($options['ratio'] && V::num($options['ratio'])) {
             $height = floor($placeholderOptions['width'] * $options['ratio']);
         } else {
             $height = $image->dimensions()->fitWidth($placeholderOptions['width'], true)->height();
