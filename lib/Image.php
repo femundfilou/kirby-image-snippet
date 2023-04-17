@@ -35,7 +35,7 @@ class Image
     public static function getPlaceholder($image, $options): string
     {
         $placeholderOptions = kirby()->option('femundfilou.image-snippet.placeholder');
-        if($options['ratio'] && V::num($options['ratio'])) {
+        if ($options['ratio'] && V::num($options['ratio'])) {
             $height = floor($placeholderOptions['width'] * $options['ratio']);
         } else {
             $height = $image->dimensions()->fitWidth($placeholderOptions['width'], true)->height();
@@ -96,12 +96,12 @@ class Image
                     endif;
                     // width and height given
                     $srcset[$dimension['width'] . 'w'] = array_merge($thumboptions, ['width' => $width, 'height' => $height, 'crop' => true, 'format' => $format]);
-                // [400]
+                    // [400]
                 } else {
                     if (!V::integer($dimension)) :
                         throw new \Exception('Width needs to be an integer.');
                     endif;
-                    if($options['ratio'] && V::num($options['ratio'])) {
+                    if ($options['ratio'] && V::num($options['ratio'])) {
                         $height = floor($dimension * $options['ratio']);
                     } else {
                         $height = $image->dimensions()->fitWidth($dimension, true)->height();
@@ -153,8 +153,8 @@ class Image
             'filename' => $image->filename(),
             'placeholder' => self::getPlaceholder($image, $options),
             'sources' => $sources,
-            'x' => $image->focusPercentageX()->value() ?? 0,
-            'y' => $image->focusPercentageY()->value() ?? 0,
+            'x' => $image->focusPercentageX() ?? 0,
+            'y' => $image->focusPercentageY() ?? 0,
             'objectFit' => $image->objectfit() && $image->objectfit()->isNotEmpty() ? $image->objectfit()->value() : 'cover',
         ]);
         return $object;
