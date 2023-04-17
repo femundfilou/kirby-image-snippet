@@ -1,5 +1,12 @@
 
 
+### [0.0.4](https://github.com/femundfilou/kirby-image-snippet/compare/v0.0.3...v0.0.4) (2023-04-17)
+
+
+### Bug Fixes
+
+* $image->focusPercentageY() && $image->focusPercentageX() are float values already ([60c0780](https://github.com/femundfilou/kirby-image-snippet/commit/60c07809e95eeadf29c6323bc39a09faf5e13d55))
+
 ### [0.0.3](https://github.com/femundfilou/kirby-image-snippet/compare/v0.0.2...v0.0.3) (2022-12-02)
 
 
