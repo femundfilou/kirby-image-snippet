@@ -1,5 +1,12 @@
 
 
+## [0.1.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.0.4...v0.1.0) (2023-08-10)
+
+
+### Features
+
+* allow kirby 4 ([2cd7ef6](https://github.com/femundfilou/kirby-image-snippet/commit/2cd7ef60bf2e2fd4afc0fb10c70b344d7f29490d))
+
 ### [0.0.4](https://github.com/femundfilou/kirby-image-snippet/compare/v0.0.3...v0.0.4) (2023-04-17)
 
 

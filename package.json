@@ -1,6 +1,6 @@
 {
   "name": "kirby-image-snippet",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Snippet + Helper Methods for handling images in Kirby",
   "scripts": {
     "release": "release-it"
