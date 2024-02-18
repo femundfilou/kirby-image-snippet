@@ -1,5 +1,18 @@
 
 
+## [0.2.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.1.0...v0.2.0) (2024-02-18)
+
+
+### Features
+
+* add decoding async to img snippet ([ab8295c](https://github.com/femundfilou/kirby-image-snippet/commit/ab8295cf79670a74994308c8202248ab5cb4e3a4))
+* allow asset() as image source for snippet ([e09e105](https://github.com/femundfilou/kirby-image-snippet/commit/e09e10527be9afd1eb1e897353addd60fe96f828))
+
+
+### Bug Fixes
+
+* allow new kirby\content\field ([f2c1e14](https://github.com/femundfilou/kirby-image-snippet/commit/f2c1e1474101f25ea1c3449c9643ecdbd5133097))
+
 ## [0.1.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.0.4...v0.1.0) (2023-08-10)
 
 
