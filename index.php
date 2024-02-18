@@ -6,7 +6,6 @@
 @require_once __DIR__ . '/lib/Image.php';
 
 use Fefi\Image\Image;
-use Kirby\Cms\Field;
 use Kirby\Toolkit\Collection;
 
 Kirby\Cms\App::plugin('femundfilou/image-snippet', [
@@ -45,7 +44,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
         },
     ],
     'fieldMethods' => [
-        'toImageInterfaces' => function (Field $field, array $options = []) {
+        'toImageInterfaces' => function (Kirby\Cms\Field|Kirby\Content\Field $field, array $options = []) {
             $images = new Collection();
             foreach ($field->toFiles() as $image) :
                 $imageObject = Image::getImageInterface($image, $options);
@@ -53,7 +52,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
             endforeach;
             return $images;
         },
-        'toImageInterface' => function (Field $field, array $options = []) {
+        'toImageInterface' => function (Kirby\Cms\Field|Kirby\Content\Field $field, array $options = []) {
             return Image::getImageInterface($field->toFiles()->first(), $options);
         },
     ],
