@@ -71,12 +71,12 @@ class Image
 
     /**
      * Generate srcset
-     * @param \Kirby\Cms\File $image Image
+     * @param \Kirby\Cms\File|\Kirby\Filesystem\Asset $image Image
      * @param array $dimensions Width or Width and Height, e.g. [400, 600] or [[400, 300], [600, 450]]
      * @param array $formats Array of image formats
      * @param float $ratio Aspect Ratio
      */
-    public static function getSrcsets(\Kirby\Cms\File $image, array $options): array
+    public static function getSrcsets(\Kirby\Cms\File|\Kirby\Filesystem\Asset $image, array $options): array
     {
         $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
         $srcsets = [];
@@ -123,12 +123,12 @@ class Image
     /**
      * Convert Image to ImageInterface to be used in Javascript
      *
-     * @param \Kirby\Cms\File $image
+     * @param \Kirby\Cms\File|\Kirby\Filesystem\Asset $image
      * @param array $dimensions Set dimensions for srcset. Possible values are an array of only width [300, 500] or width and height [['width'=> 300, 'height' => 150], ['width' => 500, 'height' => 250]]
      * @param array $options
      * @return \Kirby\Toolkit\Obj
      */
-    public static function getImageInterface(\Kirby\Cms\File $image, array $options): \Kirby\Toolkit\Obj
+    public static function getImageInterface(\Kirby\Cms\File|\Kirby\Filesystem\Asset $image, array $options): \Kirby\Toolkit\Obj
     {
         $method = self::getSrcsetMethod($image);
         $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
