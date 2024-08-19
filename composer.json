@@ -35,7 +35,7 @@
         "fix": "php-cs-fixer fix --config .php-cs-fixer.dist.php"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.8"
+        "friendsofphp/php-cs-fixer": "^3.62"
     },
     "installer-name": "image-snippet"
 }
