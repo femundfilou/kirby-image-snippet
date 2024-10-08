@@ -1,5 +1,13 @@
 
 
+### [0.2.1](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.0...v0.2.1) (2024-10-08)
+
+
+### Bug Fixes
+
+* add data-src to image element ([c365d4c](https://github.com/femundfilou/kirby-image-snippet/commit/c365d4c35c9190aa6d65168fed494e2f5e04d4ba))
+* escape alt attribute ([460f428](https://github.com/femundfilou/kirby-image-snippet/commit/460f4288f4f9a1bd4ee09d34fd41d1e4b1511094))
+
 ## [0.2.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.1.0...v0.2.0) (2024-02-18)
 
 
