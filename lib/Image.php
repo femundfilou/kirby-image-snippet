@@ -149,7 +149,7 @@ class Image
             'width' => $image->dimensions()->width(),
             'height' => $image->dimensions()->height(),
             'url' => $image->thumb($urlThumbOptions)->url(),
-            'alt' => $image->alt()->value() ?? $image->filename(),
+            'alt' => $image->alt()->escape()->value() ?? $image->filename(),
             'filename' => $image->filename(),
             'placeholder' => self::getPlaceholder($image, $options),
             'sources' => $sources,
