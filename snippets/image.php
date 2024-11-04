@@ -40,10 +40,8 @@ if (isset($dimensions)) {
 }
 if (isset($alt)) {
     $alt = $alt;
-} elseif (method_exists($image, 'alt')) {
-    $alt = $image->alt()->or($image->name());
 } else {
-    $alt = $image->name();
+    $alt = $image->alt()->or($image->name());
 }
 
 $options = array_merge($defaults, $options);
@@ -58,4 +56,4 @@ $srcsets = Image::getSrcsets($image, $options);
         <source type="image/<?= $format ?>" <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->$srcsetMethod($srcsets[$format]) ?>" />
     <?php endforeach; ?>
     <img <?= $options['lazy'] ? 'loading="lazy"' : ''; ?> width="<?= $image->width() ?>" height="<?= $options['ratio'] && V::num($options['ratio']) ? $image->width() * $options['ratio'] : $image->height() ?>" src="<?= $placeholder ?>" data-src="<?= $placeholder ?>" alt="<?= $alt ?>" decoding="async" <?= $attrs ?> />
-</picture>
+</picture>†
