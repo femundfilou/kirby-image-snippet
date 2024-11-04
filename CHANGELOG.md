@@ -1,5 +1,11 @@
 
 
+## [0.2.2](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.1...v0.2.2) (2024-11-04)
+
+### Bug Fixes
+
+* alt text, use alt field of image or filename ([8f2bd38](https://github.com/femundfilou/kirby-image-snippet/commit/8f2bd384a3678a261a6c18382562f53307f6732b))
+
 ### [0.2.1](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.0...v0.2.1) (2024-10-08)
 
 
