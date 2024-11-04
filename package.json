@@ -6,9 +6,9 @@
     "release": "release-it"
   },
   "devDependencies": {
-    "release-it": "^15.5.0",
-    "@release-it/bumper": "^4.0.0",
-    "@release-it/conventional-changelog": "^5.0.0"
+    "@release-it/bumper": "^6.0.1",
+    "@release-it/conventional-changelog": "^9.0.2",
+    "release-it": "^17.10.0"
   },
   "author": "Justus Kraft <hallo@justuskraft.de>",
   "license": "MIT"
