@@ -1,5 +1,11 @@
 
 
+## [0.2.3](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.2...v0.2.3) (2024-11-04)
+
+### Bug Fixes
+
+* remove char ([a82fe26](https://github.com/femundfilou/kirby-image-snippet/commit/a82fe26237d4293bbb80331b42da15ab3897a4fa))
+
 ## [0.2.2](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.1...v0.2.2) (2024-11-04)
 
 ### Bug Fixes
