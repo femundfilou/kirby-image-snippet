@@ -1,6 +1,6 @@
 # Kirby Image Snippet
 
-Snippet + Helper methods for handling images in Kirby.
+Snippet + Helper methods for handling images in Kirby 4+.
 
 
 ## Installation

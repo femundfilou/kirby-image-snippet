@@ -1,59 +1,55 @@
 <?php
 
 /**
- * @prettier
+ * Image snippet with picture element and lazy loading
+ * @param \Kirby\Cms\File|\Kirby\Filesystem\Asset $image Image file object
+ * @param array $options Image processing options
  */
 
 use Fefi\Image\Image;
 use Kirby\Toolkit\V;
 
-$srcsetMethod = Image::getSrcsetMethod();
+// Get defaults
 $defaults = kirby()->option('femundfilou.image-snippet.defaults');
 
-$options = [];
+// Merge options with defaults
+$options = array_merge($defaults, [
+    'lazy' => $lazy ?? $defaults['lazy'] ?? false,
+    'ratio' => $ratio ?? $defaults['ratio'] ?? null,
+    'quality' => $quality ?? $defaults['quality'] ?? null,
+    'grayscale' => $grayscale ?? $defaults['grayscale'] ?? false,
+    'blur' => $blur ?? $defaults['blur'] ?? null,
+    'formats' => $formats ?? $defaults['formats'] ?? [],
+    'dimensions' => $dimensions ?? $defaults['dimensions'] ?? null
+]);
 
-$attrs = $attrs ?? null;
+// Get alt text
+$alt = $alt ?? (method_exists($image, 'alt') && is_callable([$image, 'alt'])
+    ? $image->alt()->escape()->or($image->name())
+    : $image->name());
 
-if (isset($lazy)) {
-    $options['lazy'] = $lazy;
-}
-if (isset($ratio)) {
-    $options['ratio'] = $ratio;
-}
-if (isset($quality)) {
-    $options['quality'] = $quality;
-}
-if (isset($grayscale)) {
-    $options['grayscale'] = $grayscale;
-}
-if (isset($blur)) {
-    $options['blur'] = $blur;
-}
-if (isset($lazy)) {
-    $options['lazy'] = $lazy;
-}
-if (isset($formats)) {
-    $options['formats'] = $formats;
-}
-if (isset($dimensions)) {
-    $options['dimensions'] = $dimensions;
-}
-if (isset($alt)) {
-    $alt = $alt;
-} else {
-    $alt = $image->alt()->or($image->name());
-}
-
-$options = array_merge($defaults, $options);
-
+// Generate image data
 $placeholder = Image::getPlaceholder($image, $options);
-
 $srcsets = Image::getSrcsets($image, $options);
+
+// Calculate height based on ratio or image height
+$height = $options['ratio'] && V::num($options['ratio'])
+    ? $image->width() * $options['ratio']
+    : $image->height();
 ?>
 
 <picture <?= $options['lazy'] ? 'data-lazyload' : '' ?>>
-    <?php foreach ($options['formats'] as $format) : ?>
-        <source type="image/<?= $format ?>" <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->$srcsetMethod($srcsets[$format]) ?>" />
-    <?php endforeach; ?>
-    <img <?= $options['lazy'] ? 'loading="lazy"' : ''; ?> width="<?= $image->width() ?>" height="<?= $options['ratio'] && V::num($options['ratio']) ? $image->width() * $options['ratio'] : $image->height() ?>" src="<?= $placeholder ?>" data-src="<?= $placeholder ?>" alt="<?= $alt ?>" decoding="async" <?= $attrs ?> />
+    <?php foreach ($options['formats'] as $format): ?>
+        <source
+            type="image/<?= $format ?>"
+            <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->srcset($srcsets[$format]) ?>" />
+    <?php endforeach ?>
+    <img
+        <?= $options['lazy'] ? 'loading="lazy" decoding="async" fetchpriority="auto"' : '' ?>
+        width="<?= $image->width() ?>"
+        height="<?= $height ?>"
+        src="<?= $placeholder ?>"
+        data-src="<?= $placeholder ?>"
+        alt="<?= $alt ?>"
+        <?= $attrs ?? '' ?> />
 </picture>

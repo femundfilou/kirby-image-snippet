@@ -1,21 +1,20 @@
 <?php
 
-/**
- * @prettier
- */
-
 namespace Fefi\Image;
 
+use Kirby\Cms\File;
+use Kirby\Filesystem\Asset;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\V;
 
+/**
+ * Image processing helper class
+ * @remarks Handles image transformations and srcset generation
+ */
 class Image
 {
-    /**
-     * @var array THUMB_OPTIONS valid keys for kirby thumb method.
-     */
-    public const THUMB_OPTIONS = [
+    private const THUMB_OPTIONS = [
         'autoOrient',
         'crop',
         'blur',
@@ -26,20 +25,16 @@ class Image
     ];
 
     /**
-     * Generated placeholder image url
-     *
-     * @param \Kirby\Cms\File $image
-     * @param array $options
-     * @return string
+     * Generates placeholder image url
      */
-    public static function getPlaceholder($image, $options): string
+    public static function getPlaceholder(File|Asset $image, array $options): string
     {
+        $imageDimensions = clone $image->dimensions();
         $placeholderOptions = kirby()->option('femundfilou.image-snippet.placeholder');
-        if ($options['ratio'] && V::num($options['ratio'])) {
-            $height = floor($placeholderOptions['width'] * $options['ratio']);
-        } else {
-            $height = $image->dimensions()->fitWidth($placeholderOptions['width'], true)->height();
-        }
+        $height = $options['ratio'] && V::num($options['ratio'])
+            ? floor($placeholderOptions['width'] * $options['ratio'])
+            : $imageDimensions->fitWidth($placeholderOptions['width'], true)->height();
+
         return $image->thumb([
             'width' => $placeholderOptions['width'],
             'height' => $height,
@@ -49,114 +44,126 @@ class Image
     }
 
     /**
-     * Check if Focus plugin is installed
-     *
-     * @return string srcset Method name
+     * Gets options valid for kirby thumbs
      */
-    public static function getSrcsetMethod(): string
-    {
-        return class_exists("Flokosiol\Focus") ? 'focusSrcset' : 'srcset';
-    }
-
-    /**
-     * Get options valid for kirby thumbs
-     *
-     * @param array $options
-     * @return array
-     */
-    public static function getThumbOptions(array $options): array
+    private static function getThumbOptions(array $options): array
     {
         return A::without($options, array_keys(A::without($options, self::THUMB_OPTIONS)));
     }
 
     /**
-     * Generate srcset
-     * @param \Kirby\Cms\File|\Kirby\Filesystem\Asset $image Image
-     * @param array $dimensions Width or Width and Height, e.g. [400, 600] or [[400, 300], [600, 450]]
-     * @param array $formats Array of image formats
-     * @param float $ratio Aspect Ratio
+     * Generates srcset configurations
      */
-    public static function getSrcsets(\Kirby\Cms\File|\Kirby\Filesystem\Asset $image, array $options): array
+    public static function getSrcsets(File|Asset $image, array $options): array
     {
+        $imageDimensions = clone $image->dimensions();
         $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
+        $thumbOptions = self::getThumbOptions($options);
         $srcsets = [];
-        $thumboptions = self::getThumbOptions($options);
+
         foreach ($options['formats'] as $format) {
             $srcset = [];
             foreach ($options['dimensions'] as $dimension) {
-                // Check for [['width'=> 300, 'height' => 200]]
-                if ($dimension && is_array($dimension) && A::isAssociative($dimension)) {
-                    $width = A::get($dimension, 'width');
-                    $height = A::get($dimension, 'height');
-                    if (!$width) :
-                        throw new \Exception('Width missing.');
-                    endif;
-                    if (!$height) :
-                        throw new \Exception('Height missing.');
-                    endif;
-                    // width and height given
-                    $srcset[$dimension['width'] . 'w'] = array_merge($thumboptions, ['width' => $width, 'height' => $height, 'crop' => true, 'format' => $format]);
-                    // [400]
-                } else {
-                    if (!V::integer($dimension)) :
-                        throw new \Exception('Width needs to be an integer.');
-                    endif;
-                    if ($options['ratio'] && V::num($options['ratio'])) {
-                        $height = floor($dimension * $options['ratio']);
-                    } else {
-                        $height = $image->dimensions()->fitWidth($dimension, true)->height();
-                    }
-                    $srcset["$dimension" . 'w'] = array_merge([
-                        'width' => $dimension,
-                        'height' => $height,
-                        'crop' => true,
-                        'format' => $format,
-                    ], $thumboptions);
-                }
+                $srcset = self::processDimension($dimension, $imageDimensions, $options, $thumbOptions, $format, $srcset);
             }
-
             $srcsets[$format] = $srcset;
         }
 
         return $srcsets;
     }
+
     /**
-     * Convert Image to ImageInterface to be used in Javascript
-     *
-     * @param \Kirby\Cms\File|\Kirby\Filesystem\Asset $image
-     * @param array $dimensions Set dimensions for srcset. Possible values are an array of only width [300, 500] or width and height [['width'=> 300, 'height' => 150], ['width' => 500, 'height' => 250]]
-     * @param array $options
-     * @return \Kirby\Toolkit\Obj
+     * Processes single dimension for srcset
      */
-    public static function getImageInterface(\Kirby\Cms\File|\Kirby\Filesystem\Asset $image, array $options): \Kirby\Toolkit\Obj
+    private static function processDimension(
+        $dimension,
+        $imageDimensions,
+        array $options,
+        array $thumbOptions,
+        string $format,
+        array $srcset
+    ): array {
+        if (is_array($dimension) && A::isAssociative($dimension)) {
+            return self::processAssociativeDimension($dimension, $thumbOptions, $format);
+        }
+
+        if (!V::integer($dimension)) {
+            throw new \Exception('Width needs to be an integer.');
+        }
+
+        $height = $options['ratio'] && V::num($options['ratio'])
+            ? floor($dimension * $options['ratio'])
+            : $imageDimensions->fitWidth($dimension, true)->height();
+
+        $srcset["$dimension" . 'w'] = array_merge([
+            'width' => $dimension,
+            'height' => $height,
+            'crop' => true,
+            'format' => $format,
+        ], $thumbOptions);
+
+        return $srcset;
+    }
+
+    /**
+     * Processes associative dimension array
+     */
+    private static function processAssociativeDimension(array $dimension, array $thumbOptions, string $format): array
     {
-        $method = self::getSrcsetMethod($image);
+        $width = A::get($dimension, 'width');
+        $height = A::get($dimension, 'height');
+
+        if (!$width || !$height) {
+            throw new \Exception('Width and height required.');
+        }
+
+        return [$width . 'w' => array_merge($thumbOptions, [
+            'width' => $width,
+            'height' => $height,
+            'crop' => true,
+            'format' => $format
+        ])];
+    }
+
+    /**
+     * Converts Image to ImageInterface
+     */
+    public static function getImageInterface(File|Asset $image, array $options): Obj
+    {
+        $imageDimensions = clone $image->dimensions();
         $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
         $srcsetOptions = self::getSrcsets($image, $options);
-        $sources = [];
-        $thumboptions = self::getThumbOptions($options);
-        $urlThumbOptions = array_merge($thumboptions, [
-            'width' => $image->dimensions()->width(),
-            'height' => $options['ratio'] && V::num($options['ratio']) ? floor($image->dimensions()->width() * $options['ratio']) : $image->dimensions()->fitWidth($image->dimensions()->width(), true)->height(),
+        $thumbOptions = self::getThumbOptions($options);
+
+        $height = $options['ratio'] && V::num($options['ratio'])
+            ? (int)floor($imageDimensions->width() * $options['ratio'])
+            : $imageDimensions->fitWidth($imageDimensions->width(), true)->height();
+
+        $urlThumbOptions = array_merge($thumbOptions, [
+            'width' => $imageDimensions->width(),
+            'height' => $height,
             'crop' => true,
         ]);
 
-        foreach ($srcsetOptions as $format => $srcset) {
-            $sources[] = ['type' => "image/$format", 'srcset' => $image->$method($srcset)];
-        }
-
-        $object = new Obj([
-            'width' => $image->dimensions()->width(),
-            'height' => $image->dimensions()->height(),
+        return new Obj([
+            'width' => $imageDimensions->width(),
+            'height' => $height,
             'url' => $image->thumb($urlThumbOptions)->url(),
-            'alt' => $image->alt()->escape()->value() ?? $image->filename(),
+            'alt' => method_exists($image, 'alt') && is_callable([$image, 'alt'])
+                ? $image->alt()->escape()->value() ?? $image->name()
+                : $image->name(),
             'filename' => $image->filename(),
             'placeholder' => self::getPlaceholder($image, $options),
-            'sources' => $sources,
-            'x' => $image->focusPercentageX() ?? 0,
-            'y' => $image->focusPercentageY() ?? 0,
-            'objectFit' => $image->objectfit() && $image->objectfit()->isNotEmpty() ? $image->objectfit()->value() : 'cover',
+            'sources' => array_map(fn ($format, $srcset) => [
+                'type' => "image/$format",
+                'srcset' => $image->srcset($srcset)
+            ], array_keys($srcsetOptions), $srcsetOptions),
+            'focus' => method_exists($image, 'focus') && is_callable([$image, 'focus'])
+                ? $image->focus()->value() ?? 'center'
+                : 'center',
+            'objectFit' => method_exists($image, 'objectfit') && is_callable([$image, 'objectfit'])
+                ? $image->objectfit()->value() ?? 'cover'
+                : 'cover'
         ]);
-        return $object;
     }
 }

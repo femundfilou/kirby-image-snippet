@@ -44,7 +44,7 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
         },
     ],
     'fieldMethods' => [
-        'toImageInterfaces' => function (Kirby\Cms\Field|Kirby\Content\Field $field, array $options = []) {
+        'toImageInterfaces' => function (Kirby\Content\Field $field, array $options = []) {
             $images = new Collection();
             foreach ($field->toFiles() as $image) :
                 $imageObject = Image::getImageInterface($image, $options);
@@ -52,8 +52,13 @@ Kirby\Cms\App::plugin('femundfilou/image-snippet', [
             endforeach;
             return $images;
         },
-        'toImageInterface' => function (Kirby\Cms\Field|Kirby\Content\Field $field, array $options = []) {
+        'toImageInterface' => function (Kirby\Content\Field $field, array $options = []) {
             return Image::getImageInterface($field->toFiles()->first(), $options);
+        },
+    ],
+    'assetMethods' => [
+        'toImageInterface' => function (array $options = []) {
+            return Image::getImageInterface($this, $options);
         },
     ],
 ]);
