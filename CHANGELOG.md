@@ -1,4 +1,10 @@
+# Changelog
 
+## [1.0.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.3...v1.0.0) (2025-02-24)
+
+### Features
+
+* remove kirby 3 support, add kirby 5 ([6e51852](https://github.com/femundfilou/kirby-image-snippet/commit/6e51852974f1129507603979196c93c8f93f72cb))
 
 ## [0.2.3](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.2...v0.2.3) (2024-11-04)
 
