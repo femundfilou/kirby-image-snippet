@@ -20,7 +20,8 @@ $options = array_merge($defaults, [
     'grayscale' => $grayscale ?? $defaults['grayscale'] ?? false,
     'blur' => $blur ?? $defaults['blur'] ?? null,
     'formats' => $formats ?? $defaults['formats'] ?? [],
-    'dimensions' => $dimensions ?? $defaults['dimensions'] ?? null
+    'dimensions' => $dimensions ?? $defaults['dimensions'] ?? null,
+    'sizes' => $sizes ?? $defaults['sizes'] ?? '100vw'
 ]);
 
 // Get alt text
@@ -42,7 +43,7 @@ $height = $options['ratio'] && V::num($options['ratio'])
     <?php foreach ($options['formats'] as $format): ?>
         <source
             type="image/<?= $format ?>"
-            <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->srcset($srcsets[$format]) ?>" />
+            <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->srcset($srcsets[$format]) ?>" sizes="<?= $options['sizes'] ?>" />
     <?php endforeach ?>
     <img
         <?= $options['lazy'] ? 'loading="lazy" decoding="async" fetchpriority="auto"' : '' ?>

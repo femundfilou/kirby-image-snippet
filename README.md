@@ -67,6 +67,7 @@ return [
         'lazy' => false,
         'formats' => ['webp', 'jpg'],
         'dimensions' => [400, 800, 1140],
+        'sizes' => '100vw'
     ],
   ]
 ];
