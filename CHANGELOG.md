@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0](https://github.com/femundfilou/kirby-image-snippet/compare/v1.0.0...v1.1.0) (2025-05-07)
+
+### Features
+
+* add sizes support ([362f802](https://github.com/femundfilou/kirby-image-snippet/commit/362f8023531470d45b6a1d7e6e856e55555d7167))
+
 ## [1.0.0](https://github.com/femundfilou/kirby-image-snippet/compare/v0.2.3...v1.0.0) (2025-02-24)
 
 ### Features
