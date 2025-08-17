@@ -33,10 +33,18 @@ $alt = $alt ?? (method_exists($image, 'alt') && is_callable([$image, 'alt'])
 $placeholder = Image::getPlaceholder($image, $options);
 $srcsets = Image::getSrcsets($image, $options);
 
-// Calculate height based on ratio or image height
-$height = $options['ratio'] && V::num($options['ratio'])
-    ? $image->width() * $options['ratio']
-    : $image->height();
+// Calculate height based on aspect ratio or image height
+if ($options['ratio'] && V::num($options['ratio'])) {
+    // aspectRatio = width / height, so height = width / aspectRatio
+    $height = (int)floor($image->width() / $options['ratio']);
+
+    // If calculated height exceeds original height, fit by height instead
+    if ($height > $image->height()) {
+        $height = $image->height();
+    }
+} else {
+    $height = $image->height();
+}
 ?>
 
 <picture <?= $options['lazy'] ? 'data-lazyload' : '' ?>>

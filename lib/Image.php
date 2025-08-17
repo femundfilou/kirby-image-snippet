@@ -25,6 +25,39 @@ class Image
     ];
 
     /**
+     * Calculates dimensions for aspect ratio cropping with bounds checking
+     * Returns array with width and height that maintain the aspect ratio
+     */
+    private static function calculateAspectRatioDimensions(int $originalWidth, int $originalHeight, float $aspectRatio): array
+    {
+        // aspectRatio = width / height
+        // If aspectRatio > 1, it's landscape (wider than tall)
+        // If aspectRatio < 1, it's portrait (taller than wide)
+
+        // Calculate dimensions based on fitting the aspect ratio within original bounds
+        $targetWidth = $originalWidth;
+        $targetHeight = (int)floor($targetWidth / $aspectRatio);
+
+        // If calculated height exceeds original height, fit by height instead
+        if ($targetHeight > $originalHeight) {
+            $targetHeight = $originalHeight;
+            $targetWidth = (int)floor($targetHeight * $aspectRatio);
+        }
+
+        return ['width' => $targetWidth, 'height' => $targetHeight];
+    }
+
+    /**
+     * Calculates height from width using aspect ratio
+     * For use with specific width dimensions in srcsets
+     */
+    private static function calculateHeight(int $width, float $aspectRatio): int
+    {
+        // aspectRatio = width / height, so height = width / aspectRatio
+        return (int)floor($width / $aspectRatio);
+    }
+
+    /**
      * Generates placeholder image url
      */
     public static function getPlaceholder(File|Asset $image, array $options): string
@@ -32,7 +65,7 @@ class Image
         $imageDimensions = clone $image->dimensions();
         $placeholderOptions = kirby()->option('femundfilou.image-snippet.placeholder');
         $height = $options['ratio'] && V::num($options['ratio'])
-            ? floor($placeholderOptions['width'] * $options['ratio'])
+            ? self::calculateHeight($placeholderOptions['width'], $options['ratio'])
             : $imageDimensions->fitWidth($placeholderOptions['width'], true)->height();
 
         return $image->thumb([
@@ -91,12 +124,22 @@ class Image
             throw new \Exception('Width needs to be an integer.');
         }
 
-        $height = $options['ratio'] && V::num($options['ratio'])
-            ? floor($dimension * $options['ratio'])
-            : $imageDimensions->fitWidth($dimension, true)->height();
+        if ($options['ratio'] && V::num($options['ratio'])) {
+            // When using aspect ratio, respect original image bounds
+            $dimensions = self::calculateAspectRatioDimensions(
+                min($dimension, $imageDimensions->width()), // Don't exceed original width
+                $imageDimensions->height(),
+                $options['ratio']
+            );
+            $width = $dimensions['width'];
+            $height = $dimensions['height'];
+        } else {
+            $width = $dimension;
+            $height = $imageDimensions->fitWidth($dimension, true)->height();
+        }
 
         $srcset["$dimension" . 'w'] = array_merge([
-            'width' => $dimension,
+            'width' => $width,
             'height' => $height,
             'crop' => true,
             'format' => $format,
@@ -135,18 +178,27 @@ class Image
         $srcsetOptions = self::getSrcsets($image, $options);
         $thumbOptions = self::getThumbOptions($options);
 
-        $height = $options['ratio'] && V::num($options['ratio'])
-            ? (int)floor($imageDimensions->width() * $options['ratio'])
-            : $imageDimensions->fitWidth($imageDimensions->width(), true)->height();
+        if ($options['ratio'] && V::num($options['ratio'])) {
+            $dimensions = self::calculateAspectRatioDimensions(
+                $imageDimensions->width(),
+                $imageDimensions->height(),
+                $options['ratio']
+            );
+            $width = $dimensions['width'];
+            $height = $dimensions['height'];
+        } else {
+            $width = $imageDimensions->width();
+            $height = $imageDimensions->fitWidth($imageDimensions->width(), true)->height();
+        }
 
         $urlThumbOptions = array_merge($thumbOptions, [
-            'width' => $imageDimensions->width(),
+            'width' => $width,
             'height' => $height,
             'crop' => true,
         ]);
 
         return new Obj([
-            'width' => $imageDimensions->width(),
+            'width' => $width,
             'height' => $height,
             'url' => $image->thumb($urlThumbOptions)->url(),
             'alt' => method_exists($image, 'alt') && is_callable([$image, 'alt'])
