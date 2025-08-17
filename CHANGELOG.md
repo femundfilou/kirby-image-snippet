@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1](https://github.com/femundfilou/kirby-image-snippet/compare/v1.1.0...v1.1.1) (2025-08-17)
+
+### Bug Fixes
+
+* do not upscale images, allow portrait or landscape cropping ([1fc21da](https://github.com/femundfilou/kirby-image-snippet/commit/1fc21dae9ad3ba7674ea643fdc5173bd71b85421))
+
 ## [1.1.0](https://github.com/femundfilou/kirby-image-snippet/compare/v1.0.0...v1.1.0) (2025-05-07)
 
 ### Features
