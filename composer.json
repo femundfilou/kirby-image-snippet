@@ -13,6 +13,11 @@
             "Fefi\\Image\\": "lib/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Justus Kraft",
@@ -24,7 +29,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "getkirby/composer-installer": true
+            "getkirby/composer-installer": true,
+            "pestphp/pest-plugin": true
         }
     },
     "require": {
@@ -32,10 +38,16 @@
         "getkirby/composer-installer": "^1.1"
     },
     "scripts": {
-        "fix": "php-cs-fixer fix --config .php-cs-fixer.dist.php"
+        "fix": "php-cs-fixer fix --config .php-cs-fixer.dist.php",
+        "test": "pest",
+        "test:unit": "pest --testsuite=Unit",
+        "test:feature": "pest --testsuite=Feature"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.62"
+        "friendsofphp/php-cs-fixer": "^3.62",
+        "pestphp/pest": "^3.0",
+        "phpunit/phpunit": "^11.0",
+        "mockery/mockery": "^1.6"
     },
     "installer-name": "image-snippet"
 }
