@@ -7,21 +7,18 @@
  */
 
 use Fefi\Image\Image;
-use Kirby\Toolkit\V;
-
-// Get defaults
-$defaults = kirby()->option('femundfilou.image-snippet.defaults');
+use Fefi\Image\Options;
 
 // Merge options with defaults
-$options = array_merge($defaults, [
-    'lazy' => $lazy ?? $defaults['lazy'] ?? false,
-    'ratio' => $ratio ?? $defaults['ratio'] ?? null,
-    'quality' => $quality ?? $defaults['quality'] ?? null,
-    'grayscale' => $grayscale ?? $defaults['grayscale'] ?? false,
-    'blur' => $blur ?? $defaults['blur'] ?? null,
-    'formats' => $formats ?? $defaults['formats'] ?? [],
-    'dimensions' => $dimensions ?? $defaults['dimensions'] ?? null,
-    'sizes' => $sizes ?? $defaults['sizes'] ?? '100vw'
+$options = Options::normalizeSnippetOptions([
+    'lazy' => $lazy ?? null,
+    'ratio' => $ratio ?? null,
+    'quality' => $quality ?? null,
+    'grayscale' => $grayscale ?? null,
+    'blur' => $blur ?? null,
+    'formats' => $formats ?? null,
+    'dimensions' => $dimensions ?? null,
+    'sizes' => $sizes ?? null
 ]);
 
 // Get alt text
@@ -32,19 +29,10 @@ $alt = $alt ?? (method_exists($image, 'alt') && is_callable([$image, 'alt'])
 // Generate image data
 $placeholder = Image::getPlaceholder($image, $options);
 $srcsets = Image::getSrcsets($image, $options);
+$jpgSrcset = Image::getJpgSrcset($image, $options);
 
-// Calculate height based on aspect ratio or image height
-if ($options['ratio'] && V::num($options['ratio'])) {
-    // aspectRatio = width / height, so height = width / aspectRatio
-    $height = (int)floor($image->width() / $options['ratio']);
-
-    // If calculated height exceeds original height, fit by height instead
-    if ($height > $image->height()) {
-        $height = $image->height();
-    }
-} else {
-    $height = $image->height();
-}
+$imageInterface = Image::getImageInterface($image, $options);
+$height = $imageInterface->height;
 ?>
 
 <picture <?= $options['lazy'] ? 'data-lazyload' : '' ?>>
@@ -58,7 +46,8 @@ if ($options['ratio'] && V::num($options['ratio'])) {
         width="<?= $image->width() ?>"
         height="<?= $height ?>"
         src="<?= $placeholder ?>"
-        data-src="<?= $placeholder ?>"
+        <?= e($options['lazy'], 'data-') ?>srcset="<?= $image->srcset($jpgSrcset) ?>"
+        sizes="<?= $options['sizes'] ?>"
         alt="<?= $alt ?>"
         <?= $attrs ?? '' ?> />
 </picture>

@@ -7,6 +7,7 @@ use Kirby\Filesystem\Asset;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\V;
+use Thumbhash\Thumbhash;
 
 /**
  * Image processing helper class
@@ -23,6 +24,50 @@ class Image
         'quality',
         'width',
     ];
+
+    /**
+     * Normalizes ratio input to float value
+     * Supports string format like "16/9", "4:3", and numeric values
+     */
+    private static function normalizeRatio($ratio): ?float
+    {
+        if (!$ratio) {
+            return null;
+        }
+
+        // Handle string ratios like "16/9" or "4:3"
+        if (is_string($ratio)) {
+            // Support both "/" and ":" separators
+            if (str_contains($ratio, '/')) {
+                $parts = explode('/', $ratio, 2);
+            } elseif (str_contains($ratio, ':')) {
+                $parts = explode(':', $ratio, 2);
+            } else {
+                // Try to parse as numeric string
+                $parts = [(float)$ratio];
+            }
+
+            if (count($parts) === 2) {
+                $width = (float)trim($parts[0]);
+                $height = (float)trim($parts[1]);
+
+                if ($width > 0 && $height > 0) {
+                    return $width / $height;
+                }
+            } elseif (count($parts) === 1 && is_numeric($parts[0])) {
+                $value = (float)$parts[0];
+                return $value > 0 ? $value : null;
+            }
+        }
+
+        // Handle numeric values
+        if (is_numeric($ratio)) {
+            $value = (float)$ratio;
+            return $value > 0 ? $value : null;
+        }
+
+        return null;
+    }
 
     /**
      * Calculates dimensions for aspect ratio cropping with bounds checking
@@ -58,22 +103,141 @@ class Image
     }
 
     /**
-     * Generates placeholder image url
+     * Generates ThumbHash placeholder data URI
      */
     public static function getPlaceholder(File|Asset $image, array $options): string
     {
-        $imageDimensions = clone $image->dimensions();
-        $placeholderOptions = kirby()->option('femundfilou.image-snippet.placeholder');
-        $height = $options['ratio'] && V::num($options['ratio'])
-            ? self::calculateHeight($placeholderOptions['width'], $options['ratio'])
-            : $imageDimensions->fitWidth($placeholderOptions['width'], true)->height();
+        $kirby = kirby();
+        $id = self::getId($image);
+        $placeholderOptions = Options::placeholder();
+        $cache = $kirby->cache('femundfilou.image-snippet.thumbhash');
 
-        return $image->thumb([
-            'width' => $placeholderOptions['width'],
+        if (($cacheData = $cache->get($id)) !== null) {
+            return $cacheData;
+        }
+
+        $ratio = self::normalizeRatio($options['ratio']) ?? $image->ratio();
+        $maxSize = Options::placeholderOption('sampleMaxSize', 100);
+
+        // Handle division by zero and invalid ratios
+        if (!$ratio || $ratio <= 0) {
+            $ratio = $image->width() / max($image->height(), 1);
+        }
+
+        $height = round($image->height() > $image->width() ? $maxSize : $maxSize / $ratio);
+        $width = round($image->width() > $image->height() ? $maxSize : $maxSize * $ratio);
+
+        // Ensure minimum dimensions
+        $width = max($width, 1);
+        $height = max($height, 1);
+
+        $thumbOptions = [
+            'width' => $width,
             'height' => $height,
-            'quality' => $placeholderOptions['quality'],
-            'blur' => $placeholderOptions['blur']
-        ])->url();
+            'crop' => true,
+            'quality' => 70,
+        ];
+
+        try {
+            $imageData = $image->thumb($thumbOptions)->read();
+            $imageResource = imagecreatefromstring($imageData);
+
+            if ($imageResource === false) {
+                // Fallback to simple data URI if image processing fails
+                return 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '"%3E%3Crect width="100%" height="100%" fill="%23f0f0f0"/%3E%3C/svg%3E';
+            }
+
+            $imageHeight = imagesy($imageResource);
+            $imageWidth = imagesx($imageResource);
+            $pixels = [];
+
+            for ($y = 0; $y < $imageHeight; $y++) {
+                for ($x = 0; $x < $imageWidth; $x++) {
+                    $colorIndex = imagecolorat($imageResource, $x, $y);
+                    $color = imagecolorsforindex($imageResource, $colorIndex);
+                    $alpha = 255 - ceil($color['alpha'] * (255 / 127));
+                    $pixels[] = $color['red'];
+                    $pixels[] = $color['green'];
+                    $pixels[] = $color['blue'];
+                    $pixels[] = $alpha;
+                }
+            }
+
+            $hashArray = Thumbhash::RGBAToHash($imageWidth, $imageHeight, $pixels);
+            $decodedImage = Thumbhash::hashToRGBA($hashArray);
+
+            $transparent = array_reduce(array_chunk($decodedImage['rgba'], 4), function ($carry, $item) {
+                return $carry || $item[3] < 255;
+            }, false);
+
+            $dataUri = Thumbhash::rgbaToDataURL($decodedImage['w'], $decodedImage['h'], $decodedImage['rgba']);
+            $blurRadius = Options::placeholderOption('blurRadius', 1);
+
+            if ($blurRadius !== 0) {
+                $svg = self::createSvgWithBlur($decodedImage, $dataUri, $blurRadius, $transparent);
+                $dataUri = self::svgToUri($svg);
+            }
+
+            $cache->set($id, $dataUri);
+            return $dataUri;
+        } catch (\Exception $e) {
+            // Fallback to simple placeholder on any error
+            $fallbackSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '"><rect width="100%" height="100%" fill="#f0f0f0"/></svg>';
+            return self::svgToUri($fallbackSvg);
+        }
+    }
+
+    /**
+     * Returns the uuid for a File, or its mediaHash for Assets
+     */
+    private static function getId(File|Asset $file): string
+    {
+        if ($file instanceof Asset) {
+            return $file->mediaHash();
+        }
+
+        return $file->uuid()?->id() ?? $file->id();
+    }
+
+    /**
+     * Creates SVG with blur filter applied
+     */
+    private static function createSvgWithBlur(array $image, string $dataUri, float $blurRadius, bool $transparent): string
+    {
+        $svgHeight = number_format($image['h'], 2, '.', '');
+        $svgWidth = number_format($image['w'], 2, '.', '');
+
+        $alphaFilter = '';
+        if (!$transparent) {
+            $alphaFilter = <<<EOD
+            <feComponentTransfer>
+                <feFuncA type="discrete" tableValues="1 1"></feFuncA>
+            </feComponentTransfer>
+            EOD;
+        }
+
+        return <<<EOD
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {$svgWidth} {$svgHeight}">
+          <filter id="b" color-interpolation-filters="sRGB">
+            <feGaussianBlur stdDeviation="{$blurRadius}"></feGaussianBlur>
+            {$alphaFilter}
+          </filter>
+          <image filter="url(#b)" x="0" y="0" width="100%" height="100%" href="{$dataUri}"></image>
+        </svg>
+        EOD;
+    }
+
+    /**
+     * Converts SVG to optimized URI-encoded string
+     */
+    private static function svgToUri(string $data): string
+    {
+        $data = preg_replace('/\s+/', ' ', $data);
+        $data = preg_replace('/> </', '><', $data);
+        $data = rawurlencode($data);
+        $data = str_replace(['%2F', '%3A', '%3D'], ['/', ':', '='], $data);
+
+        return 'data:image/svg+xml;charset=utf-8,' . $data;
     }
 
     /**
@@ -90,7 +254,7 @@ class Image
     public static function getSrcsets(File|Asset $image, array $options): array
     {
         $imageDimensions = clone $image->dimensions();
-        $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
+        $options = Options::merge($options);
         $thumbOptions = self::getThumbOptions($options);
         $srcsets = [];
 
@@ -103,6 +267,23 @@ class Image
         }
 
         return $srcsets;
+    }
+
+    /**
+     * Generates JPG-only srcset for img fallback
+     */
+    public static function getJpgSrcset(File|Asset $image, array $options): array
+    {
+        $imageDimensions = clone $image->dimensions();
+        $options = Options::merge($options);
+        $thumbOptions = self::getThumbOptions($options);
+        $srcset = [];
+
+        foreach ($options['dimensions'] as $dimension) {
+            $srcset = self::processDimension($dimension, $imageDimensions, $options, $thumbOptions, 'jpg', $srcset);
+        }
+
+        return $srcset;
     }
 
     /**
@@ -124,12 +305,13 @@ class Image
             throw new \Exception('Width needs to be an integer.');
         }
 
-        if ($options['ratio'] && V::num($options['ratio'])) {
+        $normalizedRatio = self::normalizeRatio($options['ratio']);
+        if ($normalizedRatio) {
             // When using aspect ratio, respect original image bounds
             $dimensions = self::calculateAspectRatioDimensions(
                 min($dimension, $imageDimensions->width()), // Don't exceed original width
                 $imageDimensions->height(),
-                $options['ratio']
+                $normalizedRatio
             );
             $width = $dimensions['width'];
             $height = $dimensions['height'];
@@ -174,15 +356,16 @@ class Image
     public static function getImageInterface(File|Asset $image, array $options): Obj
     {
         $imageDimensions = clone $image->dimensions();
-        $options = array_merge(kirby()->option('femundfilou.image-snippet.defaults'), $options);
+        $options = Options::merge($options);
         $srcsetOptions = self::getSrcsets($image, $options);
         $thumbOptions = self::getThumbOptions($options);
 
-        if ($options['ratio'] && V::num($options['ratio'])) {
+        $normalizedRatio = self::normalizeRatio($options['ratio']);
+        if ($normalizedRatio) {
             $dimensions = self::calculateAspectRatioDimensions(
                 $imageDimensions->width(),
                 $imageDimensions->height(),
-                $options['ratio']
+                $normalizedRatio
             );
             $width = $dimensions['width'];
             $height = $dimensions['height'];

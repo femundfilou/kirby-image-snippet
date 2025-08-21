@@ -3,6 +3,7 @@
 /**
  * @prettier
  */
+@require_once __DIR__ . '/lib/Options.php';
 @require_once __DIR__ . '/lib/Image.php';
 
 use Fefi\Image\Image;
@@ -10,21 +11,7 @@ use Kirby\Toolkit\Collection;
 
 Kirby\Cms\App::plugin('femundfilou/image-snippet', [
     'options' => [
-        'placeholder' => [
-            'width' => 50,
-            'blur' => 10,
-            'quality' => 50
-        ],
-        'defaults' => [
-            'ratio' => 0,
-            'quality' => 80,
-            'blur' => 0,
-            'grayscale' => false,
-            'lazy' => false,
-            'formats' => ['webp', 'jpg'],
-            'dimensions' => [400, 800, 1140],
-            'sizes' => '100vw'
-        ],
+        'cache' => 'true'
     ],
     'snippets' => [
         'image' => __DIR__ . '/snippets/image.php',
