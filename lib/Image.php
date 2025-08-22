@@ -2,13 +2,11 @@
 
 namespace Fefi\Image;
 
-use Fefi\Image\Options;
 use Kirby\Cms\File;
 use Kirby\Filesystem\Asset;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\Obj;
 use Kirby\Toolkit\V;
-use Thumbhash\Thumbhash;
 
 /**
  * Image processing helper class
@@ -94,23 +92,12 @@ class Image
     }
 
     /**
-     * Calculates height from width using aspect ratio
-     * For use with specific width dimensions in srcsets
-     */
-    private static function calculateHeight(int $width, float $aspectRatio): int
-    {
-        // aspectRatio = width / height, so height = width / aspectRatio
-        return (int)floor($width / $aspectRatio);
-    }
-
-    /**
-     * Generates ThumbHash placeholder data URI
+     * Generates placeholder data URI (ThumbHash if available, fallback otherwise)
      */
     public static function getPlaceholder(File|Asset $image, array $options): string
     {
         $kirby = kirby();
         $id = self::getId($image);
-        $placeholderOptions = Options::placeholder();
         $cache = $kirby->cache(Options::NAMESPACE);
 
         if (($cacheData = $cache->get($id)) !== null) {
@@ -132,6 +119,22 @@ class Image
         $width = max($width, 1);
         $height = max($height, 1);
 
+        // Try ThumbHash if available, otherwise use fallback
+        if (class_exists('\Thumbhash\Thumbhash')) {
+            $dataUri = self::generateThumbHashPlaceholder($image, $width, $height);
+        } else {
+            $dataUri = self::generateFallbackPlaceholder($image, $width, $height);
+        }
+
+        $cache->set($id, $dataUri);
+        return $dataUri;
+    }
+
+    /**
+     * Generates ThumbHash placeholder when library is available
+     */
+    private static function generateThumbHashPlaceholder(File|Asset $image, int $width, int $height): string
+    {
         $thumbOptions = [
             'width' => $width,
             'height' => $height,
@@ -144,8 +147,7 @@ class Image
             $imageResource = imagecreatefromstring($imageData);
 
             if ($imageResource === false) {
-                // Fallback to simple data URI if image processing fails
-                return 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '"%3E%3Crect width="100%" height="100%" fill="%23f0f0f0"/%3E%3C/svg%3E';
+                return self::generateFallbackPlaceholder($image, $width, $height);
             }
 
             $imageHeight = imagesy($imageResource);
@@ -164,29 +166,92 @@ class Image
                 }
             }
 
-            $hashArray = Thumbhash::RGBAToHash($imageWidth, $imageHeight, $pixels);
-            $decodedImage = Thumbhash::hashToRGBA($hashArray);
+            $hashArray = \Thumbhash\Thumbhash::RGBAToHash($imageWidth, $imageHeight, $pixels);
+            $decodedImage = \Thumbhash\Thumbhash::hashToRGBA($hashArray);
 
             $transparent = array_reduce(array_chunk($decodedImage['rgba'], 4), function ($carry, $item) {
                 return $carry || $item[3] < 255;
             }, false);
 
-            $dataUri = Thumbhash::rgbaToDataURL($decodedImage['w'], $decodedImage['h'], $decodedImage['rgba']);
+            $dataUri = \Thumbhash\Thumbhash::rgbaToDataURL($decodedImage['w'], $decodedImage['h'], $decodedImage['rgba']);
             $blurRadius = Options::placeholderOption('blurRadius', 1);
 
             if ($blurRadius !== 0) {
-                $svg = self::createSvgWithBlur($decodedImage, $dataUri, $blurRadius, $transparent);
+                $svg = self::createBlurredSvg($dataUri, $decodedImage['w'], $decodedImage['h'], $blurRadius, $transparent);
                 $dataUri = self::svgToUri($svg);
             }
 
-            $cache->set($id, $dataUri);
-
             return $dataUri;
-        } catch (\Exception $e) {
-            // Fallback to simple placeholder on any error
+        } catch (\Exception) {
+            return self::generateFallbackPlaceholder($image, $width, $height);
+        }
+    }
+
+    /**
+     * Generates fallback placeholder when ThumbHash is not available
+     */
+    private static function generateFallbackPlaceholder(File|Asset $image, int $width, int $height): string
+    {
+        $thumbOptions = [
+            'width' => $width,
+            'height' => $height,
+            'crop' => true,
+            'quality' => Options::placeholderOption('quality', 20),
+        ];
+
+        try {
+            // Read the thumbnail data directly to create a base64 data URI
+            $thumbData = $image->thumb($thumbOptions)->read();
+            $base64 = base64_encode($thumbData);
+            $mimeType = $image->thumb($thumbOptions)->mime();
+            $dataUri = "data:{$mimeType};base64,{$base64}";
+
+            $blurRadius = Options::placeholderOption('blurRadius', 1);
+
+            if ($blurRadius !== 0) {
+                $svg = self::createBlurredSvg($dataUri, $width, $height, $blurRadius);
+                return self::svgToUri($svg);
+            }
+
+            // Return the thumbnail as base64 data URI wrapped in SVG
+            return self::svgToUri(
+                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' . $width . ' ' . $height . '">' .
+                    '<image width="100%" height="100%" xlink:href="' . $dataUri . '"></image>' .
+                    '</svg>'
+            );
+        } catch (\Exception) {
+            // Ultimate fallback to solid color
             $fallbackSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '"><rect width="100%" height="100%" fill="#f0f0f0"/></svg>';
             return self::svgToUri($fallbackSvg);
         }
+    }
+
+    /**
+     * Creates SVG with blurred image using data URI
+     */
+    private static function createBlurredSvg(string $dataUri, float $width, float $height, float $blurRadius, bool $transparent = true): string
+    {
+        $svgHeight = number_format($height, 2, '.', '');
+        $svgWidth = number_format($width, 2, '.', '');
+
+        $alphaFilter = '';
+        if (!$transparent) {
+            $alphaFilter = <<<EOD
+            <feComponentTransfer>
+                <feFuncA type="discrete" tableValues="1 1"></feFuncA>
+            </feComponentTransfer>
+            EOD;
+        }
+        // Overshoot to avoid blurry edges
+        return <<<EOD
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 {$svgWidth} {$svgHeight}">
+          <filter id="b" color-interpolation-filters="sRGB">
+            <feGaussianBlur stdDeviation="{$blurRadius}"></feGaussianBlur>
+            {$alphaFilter}
+          </filter>
+          <image filter="url(#b)" x="-2.5%" y="-2.5%" width="105%" height="105%" href="{$dataUri}"></image>
+        </svg>
+        EOD;
     }
 
     /**
@@ -201,33 +266,6 @@ class Image
         return $file->uuid()?->id() ?? $file->id();
     }
 
-    /**
-     * Creates SVG with blur filter applied
-     */
-    private static function createSvgWithBlur(array $image, string $dataUri, float $blurRadius, bool $transparent): string
-    {
-        $svgHeight = number_format($image['h'], 2, '.', '');
-        $svgWidth = number_format($image['w'], 2, '.', '');
-
-        $alphaFilter = '';
-        if (!$transparent) {
-            $alphaFilter = <<<EOD
-            <feComponentTransfer>
-                <feFuncA type="discrete" tableValues="1 1"></feFuncA>
-            </feComponentTransfer>
-            EOD;
-        }
-
-        return <<<EOD
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {$svgWidth} {$svgHeight}">
-          <filter id="b" color-interpolation-filters="sRGB">
-            <feGaussianBlur stdDeviation="{$blurRadius}"></feGaussianBlur>
-            {$alphaFilter}
-          </filter>
-          <image filter="url(#b)" x="0" y="0" width="100%" height="100%" href="{$dataUri}"></image>
-        </svg>
-        EOD;
-    }
 
     /**
      * Converts SVG to optimized URI-encoded string

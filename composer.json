@@ -35,8 +35,10 @@
     },
     "require": {
         "getkirby/cms": "^4.0 || ^5.0",
-        "getkirby/composer-installer": "^1.1",
-        "srwiez/thumbhash": "^1.4"
+        "getkirby/composer-installer": "^1.1"
+    },
+    "suggest": {
+        "srwiez/thumbhash": "^1.4 - For enhanced placeholder image generation with ThumbHash"
     },
     "scripts": {
         "fix": "php-cs-fixer fix --config .php-cs-fixer.dist.php",
