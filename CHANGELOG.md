@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0-beta.0](https://github.com/femundfilou/kirby-image-snippet/compare/v1.1.1...v2.0.0-beta.0) (2025-08-22)
+
+### Features
+
+* add thumbhash, add options class ([b2e153e](https://github.com/femundfilou/kirby-image-snippet/commit/b2e153e9e84118f8fdd51a72f7ed28f6cb00d867))
+* make thumbhash optional, add overshoot to blurred svg ([c7a4616](https://github.com/femundfilou/kirby-image-snippet/commit/c7a461678e34a32bca9a4e8a607919946c558d9f))
+
+### Bug Fixes
+
+* caching ([0e0e3c0](https://github.com/femundfilou/kirby-image-snippet/commit/0e0e3c093427b4c48c6ec10aeb408a7e1b9ff30e))
+
 ## [1.1.1](https://github.com/femundfilou/kirby-image-snippet/compare/v1.1.0...v1.1.1) (2025-08-17)
 
 ### Bug Fixes
