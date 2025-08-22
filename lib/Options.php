@@ -10,7 +10,7 @@ use Kirby\Cms\App;
  */
 class Options
 {
-    private const NAMESPACE = 'femundfilou.image-snippet';
+    public const NAMESPACE = 'femundfilou.image-snippet';
 
     private static ?array $cachedDefaults = null;
     private static ?array $cachedPlaceholder = null;

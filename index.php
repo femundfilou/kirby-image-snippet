@@ -11,7 +11,7 @@ use Kirby\Toolkit\Collection;
 
 Kirby\Cms\App::plugin('femundfilou/image-snippet', [
     'options' => [
-        'cache' => 'true'
+        'cache' => true
     ],
     'snippets' => [
         'image' => __DIR__ . '/snippets/image.php',

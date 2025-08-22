@@ -2,6 +2,7 @@
 
 namespace Fefi\Image;
 
+use Fefi\Image\Options;
 use Kirby\Cms\File;
 use Kirby\Filesystem\Asset;
 use Kirby\Toolkit\A;
@@ -110,7 +111,7 @@ class Image
         $kirby = kirby();
         $id = self::getId($image);
         $placeholderOptions = Options::placeholder();
-        $cache = $kirby->cache('femundfilou.image-snippet.thumbhash');
+        $cache = $kirby->cache(Options::NAMESPACE);
 
         if (($cacheData = $cache->get($id)) !== null) {
             return $cacheData;
@@ -179,6 +180,7 @@ class Image
             }
 
             $cache->set($id, $dataUri);
+
             return $dataUri;
         } catch (\Exception $e) {
             // Fallback to simple placeholder on any error
@@ -389,7 +391,7 @@ class Image
                 : $image->name(),
             'filename' => $image->filename(),
             'placeholder' => self::getPlaceholder($image, $options),
-            'sources' => array_map(fn ($format, $srcset) => [
+            'sources' => array_map(fn($format, $srcset) => [
                 'type' => "image/$format",
                 'srcset' => $image->srcset($srcset)
             ], array_keys($srcsetOptions), $srcsetOptions),
