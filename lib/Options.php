@@ -30,7 +30,7 @@ class Options
     public static function defaults(): array
     {
         if (self::$cachedDefaults === null) {
-            self::$cachedDefaults = self::option('defaults', [
+            $builtInDefaults = [
                 'ratio' => 0,
                 'quality' => 70,
                 'blur' => 0,
@@ -39,7 +39,23 @@ class Options
                 'formats' => ['avif', 'webp'],
                 'dimensions' => [400, 800, 1140],
                 'sizes' => '100vw'
-            ]);
+            ];
+            
+            $userOptions = [
+                'ratio' => self::option('ratio'),
+                'quality' => self::option('quality'),
+                'blur' => self::option('blur'),
+                'grayscale' => self::option('grayscale'),
+                'lazy' => self::option('lazy'),
+                'formats' => self::option('formats'),
+                'dimensions' => self::option('dimensions'),
+                'sizes' => self::option('sizes'),
+            ];
+            
+            // Remove null values to only merge set options
+            $userOptions = array_filter($userOptions, fn($value) => $value !== null);
+            
+            self::$cachedDefaults = array_merge($builtInDefaults, $userOptions);
         }
 
         return self::$cachedDefaults;
@@ -51,13 +67,26 @@ class Options
     public static function placeholder(): array
     {
         if (self::$cachedPlaceholder === null) {
-            self::$cachedPlaceholder = self::option('placeholder', [
+            $builtInDefaults = [
                 'width' => 50,
                 'blur' => 10,
                 'quality' => 50,
                 'sampleMaxSize' => 100,
                 'blurRadius' => 1
-            ]);
+            ];
+            
+            $userOptions = [
+                'width' => self::option('placeholder.width'),
+                'blur' => self::option('placeholder.blur'),
+                'quality' => self::option('placeholder.quality'),
+                'sampleMaxSize' => self::option('placeholder.sampleMaxSize'),
+                'blurRadius' => self::option('placeholder.blurRadius'),
+            ];
+            
+            // Remove null values to only merge set options
+            $userOptions = array_filter($userOptions, fn($value) => $value !== null);
+            
+            self::$cachedPlaceholder = array_merge($builtInDefaults, $userOptions);
         }
 
         return self::$cachedPlaceholder;
