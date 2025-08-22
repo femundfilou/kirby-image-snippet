@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-beta.1](https://github.com/femundfilou/kirby-image-snippet/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2025-08-22)
+
+### Bug Fixes
+
+* aspect ratio calculation, add check for kirby field ([a4f4ac8](https://github.com/femundfilou/kirby-image-snippet/commit/a4f4ac8154f9d505033c3622466814e349165b08))
+* refactor options, remove defaults key, merge with user config ([b8d25c3](https://github.com/femundfilou/kirby-image-snippet/commit/b8d25c39566b76e8a14ab05434248e96b0277f69))
+
 ## [2.0.0-beta.0](https://github.com/femundfilou/kirby-image-snippet/compare/v1.1.1...v2.0.0-beta.0) (2025-08-22)
 
 ### Features
