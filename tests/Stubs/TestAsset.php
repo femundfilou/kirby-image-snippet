@@ -60,4 +60,14 @@ class TestAsset extends Asset
     {
         return 'test-srcset';
     }
+
+    public function root(): string
+    {
+        return '/tmp/test-asset.jpg';
+    }
+
+    public function mediaHash(): string
+    {
+        return 'test-media-hash-' . $this->testWidth . 'x' . $this->testHeight;
+    }
 }

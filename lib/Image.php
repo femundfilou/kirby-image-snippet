@@ -34,6 +34,11 @@ class Image
             return null;
         }
 
+        // Handle Kirby Field objects
+        if (is_object($ratio) && method_exists($ratio, 'value') && is_callable([$ratio, 'value'])) {
+            return self::normalizeRatio($ratio->value());
+        }
+
         // Handle string ratios like "16/9" or "4:3"
         if (is_string($ratio)) {
             // Support both "/" and ":" separators
@@ -65,31 +70,11 @@ class Image
             return $value > 0 ? $value : null;
         }
 
+
+
         return null;
     }
 
-    /**
-     * Calculates dimensions for aspect ratio cropping with bounds checking
-     * Returns array with width and height that maintain the aspect ratio
-     */
-    private static function calculateAspectRatioDimensions(int $originalWidth, int $originalHeight, float $aspectRatio): array
-    {
-        // aspectRatio = width / height
-        // If aspectRatio > 1, it's landscape (wider than tall)
-        // If aspectRatio < 1, it's portrait (taller than wide)
-
-        // Calculate dimensions based on fitting the aspect ratio within original bounds
-        $targetWidth = $originalWidth;
-        $targetHeight = (int)floor($targetWidth / $aspectRatio);
-
-        // If calculated height exceeds original height, fit by height instead
-        if ($targetHeight > $originalHeight) {
-            $targetHeight = $originalHeight;
-            $targetWidth = (int)floor($targetHeight * $aspectRatio);
-        }
-
-        return ['width' => $targetWidth, 'height' => $targetHeight];
-    }
 
     /**
      * Generates placeholder data URI (ThumbHash if available, fallback otherwise)
@@ -346,15 +331,19 @@ class Image
         }
 
         $normalizedRatio = self::normalizeRatio($options['ratio']);
-        if ($normalizedRatio) {
-            // When using aspect ratio, respect original image bounds
-            $dimensions = self::calculateAspectRatioDimensions(
-                min($dimension, $imageDimensions->width()), // Don't exceed original width
-                $imageDimensions->height(),
-                $normalizedRatio
-            );
-            $width = $dimensions['width'];
-            $height = $dimensions['height'];
+        if ($normalizedRatio && $normalizedRatio > 0) {
+            // Calculate target dimensions based on the desired width and aspect ratio
+            $targetWidth = min($dimension, $imageDimensions->width()); // Don't exceed original width
+            $targetHeight = (int)floor($targetWidth / $normalizedRatio);
+
+            // If calculated height exceeds original height, fit by height instead
+            if ($targetHeight > $imageDimensions->height()) {
+                $targetHeight = $imageDimensions->height();
+                $targetWidth = (int)floor($targetHeight * $normalizedRatio);
+            }
+
+            $width = $targetWidth;
+            $height = $targetHeight;
         } else {
             $width = $dimension;
             $height = $imageDimensions->fitWidth($dimension, true)->height();
@@ -401,14 +390,19 @@ class Image
         $thumbOptions = self::getThumbOptions($options);
 
         $normalizedRatio = self::normalizeRatio($options['ratio']);
-        if ($normalizedRatio) {
-            $dimensions = self::calculateAspectRatioDimensions(
-                $imageDimensions->width(),
-                $imageDimensions->height(),
-                $normalizedRatio
-            );
-            $width = $dimensions['width'];
-            $height = $dimensions['height'];
+        if ($normalizedRatio && $normalizedRatio > 0) {
+            // Calculate target dimensions based on original image width and aspect ratio
+            $targetWidth = $imageDimensions->width();
+            $targetHeight = (int)floor($targetWidth / $normalizedRatio);
+
+            // If calculated height exceeds original height, fit by height instead
+            if ($targetHeight > $imageDimensions->height()) {
+                $targetHeight = $imageDimensions->height();
+                $targetWidth = (int)floor($targetHeight * $normalizedRatio);
+            }
+
+            $width = $targetWidth;
+            $height = $targetHeight;
         } else {
             $width = $imageDimensions->width();
             $height = $imageDimensions->fitWidth($imageDimensions->width(), true)->height();

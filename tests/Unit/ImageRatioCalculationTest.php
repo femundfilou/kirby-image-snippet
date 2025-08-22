@@ -133,10 +133,10 @@ describe('Image Ratio Calculations', function () {
         $imageInterface = Image::getImageInterface($file, $options);
         expect($imageInterface->height)->toBe(600);
 
-        // Negative ratio will be calculated since it's numeric (800 * -1 = -800, floored)
+        // Negative ratio should be ignored and use original dimensions
         $options = ['ratio' => -1];
         $imageInterface = Image::getImageInterface($file, $options);
-        expect($imageInterface->height)->toBe(-800);
+        expect($imageInterface->height)->toBe(600);
     });
 
     test('calculates correct height with aspect ratio 1.7 (landscape)', function () {

@@ -40,7 +40,7 @@ class Options
                 'dimensions' => [400, 800, 1140],
                 'sizes' => '100vw'
             ];
-            
+
             $userOptions = [
                 'ratio' => self::option('ratio'),
                 'quality' => self::option('quality'),
@@ -51,10 +51,10 @@ class Options
                 'dimensions' => self::option('dimensions'),
                 'sizes' => self::option('sizes'),
             ];
-            
+
             // Remove null values to only merge set options
-            $userOptions = array_filter($userOptions, fn($value) => $value !== null);
-            
+            $userOptions = array_filter($userOptions, fn ($value) => $value !== null);
+
             self::$cachedDefaults = array_merge($builtInDefaults, $userOptions);
         }
 
@@ -74,7 +74,7 @@ class Options
                 'sampleMaxSize' => 100,
                 'blurRadius' => 1
             ];
-            
+
             $userOptions = [
                 'width' => self::option('placeholder.width'),
                 'blur' => self::option('placeholder.blur'),
@@ -82,10 +82,10 @@ class Options
                 'sampleMaxSize' => self::option('placeholder.sampleMaxSize'),
                 'blurRadius' => self::option('placeholder.blurRadius'),
             ];
-            
+
             // Remove null values to only merge set options
-            $userOptions = array_filter($userOptions, fn($value) => $value !== null);
-            
+            $userOptions = array_filter($userOptions, fn ($value) => $value !== null);
+
             self::$cachedPlaceholder = array_merge($builtInDefaults, $userOptions);
         }
 
