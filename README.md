@@ -59,16 +59,14 @@ return [
         'blur' => 10,
         'quality' => 50
     ],
-    'defaults' => [
-        'ratio' => 0,
-        'quality' => 80,
-        'blur' => 0,
-        'grayscale' => false,
-        'lazy' => false,
-        'formats' => ['webp', 'jpg'],
-        'dimensions' => [400, 800, 1140],
-        'sizes' => '100vw'
-    ],
+    'ratio' => 0,
+    'quality' => 80,
+    'blur' => 0,
+    'grayscale' => false,
+    'lazy' => false,
+    'formats' => ['webp', 'jpg'],
+    'dimensions' => [400, 800, 1140],
+    'sizes' => '100vw'
   ]
 ];
 
