@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.0](https://github.com/femundfilou/kirby-image-snippet/compare/v2.0.0-beta.1...v2.0.0) (2026-01-31)
+
+### Bug Fixes
+
+* update license ([1263a0a](https://github.com/femundfilou/kirby-image-snippet/commit/1263a0ac1026c49f8d49af57c06be0dd6be41a17))
+
 ## [2.0.0-beta.1](https://github.com/femundfilou/kirby-image-snippet/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2025-08-22)
 
 ### Bug Fixes
