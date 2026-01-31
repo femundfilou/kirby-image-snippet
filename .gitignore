@@ -6,3 +6,4 @@ kirby
 .idea
 composer.lock
 *.cache
+.claude
