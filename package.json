@@ -6,11 +6,11 @@
     "release": "release-it"
   },
   "devDependencies": {
-    "@release-it/bumper": "^7.0.1",
-    "@release-it/conventional-changelog": "^10.0.0",
-    "release-it": "^18.1.2"
+    "@release-it/bumper": "^7.0.5",
+    "@release-it/conventional-changelog": "^10.0.4",
+    "release-it": "^19.2.4"
   },
   "author": "Justus Kraft <hallo@justuskraft.de>",
   "license": "MIT",
-  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
+  "packageManager": "pnpm@10.28.2"
 }
