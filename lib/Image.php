@@ -423,7 +423,7 @@ class Image
                 : $image->name(),
             'filename' => $image->filename(),
             'placeholder' => self::getPlaceholder($image, $options),
-            'sources' => array_map(fn($format, $srcset) => [
+            'sources' => array_map(fn ($format, $srcset) => [
                 'type' => "image/$format",
                 'srcset' => $image->srcset($srcset)
             ], array_keys($srcsetOptions), $srcsetOptions),
