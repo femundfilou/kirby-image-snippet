@@ -30,7 +30,7 @@ This is a Kirby CMS plugin that provides image processing functionality with res
 **Key Classes:**
 - `Fefi\Image\Image` - Main image processing class that handles:
   - Placeholder image generation with blur/quality options
-  - Multi-format srcset generation (webp, jpg) 
+  - Multi-format srcset generation (webp, jpg)
   - Responsive dimension calculations with ratio support
   - Image interface object creation for JSON serialization
 
@@ -62,7 +62,6 @@ Uses PHP CS Fixer with PSR-12 standards plus additional rules defined in `.php-c
 Tests are implemented using Pest PHP framework with PHPUnit as the underlying test runner. The test suite includes:
 
 - **Unit Tests** (`tests/Unit/`) - Test individual Image class methods in isolation
-- **Feature Tests** (`tests/Feature/`) - Test plugin integration with Kirby CMS
 
 Key testing features:
 - Mock objects for File and Asset classes to test image processing logic

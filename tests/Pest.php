@@ -3,7 +3,6 @@
 /**
  * This file is the entry point for configuring test suites when running Pest tests.
  */
-uses()->in('Feature');
 uses()->in('Unit');
 
 // Isolated unit testing - create a minimal Kirby instance only once
@@ -16,12 +15,12 @@ if (!function_exists('ensureKirbyForTesting')) {
                     'index' => __DIR__ . '/../',
                 ],
                 'options' => [
-                    'femundfilou.image-snippet.placeholder' => [
-                        'width' => 50,
-                        'blur' => 10,
-                        'quality' => 50
-                    ],
-                    'femundfilou.image-snippet.defaults' => [
+                    'femundfilou.image-snippet' => [
+                        'placeholder' => [
+                            'width' => 50,
+                            'blur' => 10,
+                            'quality' => 50
+                        ],
                         'ratio' => 0,
                         'quality' => 80,
                         'blur' => 0,
